@@ -17,6 +17,7 @@ class ZombieState(enum.Enum):
     Represents the state of a User.
     """
     inactive = "INACTIVE"
+    starting = "RUNNING"
     running = "RUNNING"
     waiting = "WAITING"
     stopping = "STOPPING"

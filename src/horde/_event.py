@@ -6,12 +6,13 @@ import warnings
 import asyncio
 import logging
 
+from horde._compat import IS_PY_310_COMPATIBLE
 import horde.events
 
 log = logging.getLogger(__name__)
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=IS_PY_310_COMPATIBLE)
 class EventHook:
     event_name: str
     handlers: list[Callable] = None
@@ -33,13 +34,19 @@ class EventHook:
         # do we need to a threading pid check and asyncio.run_coroutine_threadsafe ?
         return [self.event_loop.create_task(listener(*a, **kw)) for listener in self.handlers]
 
+    def __repr__(self) -> None:
+        return f"<EventHook '{self.event_name}' with {len(self.handlers)} listeners>"
+
 
 class EventBus:
     """
     """
     def __init__(self, loop):
         self._loop = loop
-        self._events = {event_name: EventHook(event_name, event_loop=loop) for event_name in horde.events.__all__}
+        self._events = {
+            getattr(horde.events, event_name): EventHook(getattr(horde.events, event_name), event_loop=loop)
+            for event_name in horde.events.__all__
+        }
 
     def __getattr__(self, attr_name: str) -> EventHook | Any:
         if attr_name in self._events:
@@ -61,6 +68,12 @@ class EventBus:
             warnings.warn(f"overriding currently registered event with name '{event_name}'", UserWarning)
 
         self._events[event_name] = EventHook(event_name, handlers=listeners)
+
+    def add_listener(self, event_name: str, *, listener: Callable) -> None:
+        self._events[event_name].add_listener(listener)
+
+    def remove_listener(self, event_name: str, *, listener: Callable) -> None:
+        self._events[event_name].remove_listener(listener)
 
     def fire(self, event_name: str, *a, **kw) -> list[asyncio.Future]:
         event_name = event_name.lower()

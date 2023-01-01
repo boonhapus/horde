@@ -2,7 +2,7 @@ from typing import Callable
 import functools as ft
 import itertools as it
 
-from horde.zombie import Zombie
+from horde._zombie import Zombie
 
 
 class SpawnPolicy:
@@ -14,6 +14,9 @@ class SpawnPolicy:
 
     def __iter__(self):
         return self
+
+    def __next__(self) -> tuple[Zombie, int]:
+        return self.shape()
 
 
 class RoundRobinSpawnPolicy(SpawnPolicy):
@@ -27,5 +30,7 @@ class RoundRobinSpawnPolicy(SpawnPolicy):
         self.zombie_classes = zombie_classes
         self._actual_iterator = it.cycle(sorted(self.zombie_classes, key=sort_key))
 
-    def __next__(self) -> Zombie:
-        return next(self._actual_iterator)
+    def shape(self) -> tuple[Zombie, int]:
+        """
+        """
+        return next(self._actual_iterator), 1

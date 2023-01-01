@@ -1,6 +1,11 @@
+from __future__ import annotations
 from typing import NewType, Callable
+from typing import TYPE_CHECKING
 import random
 import time
+
+if TYPE_CHECKING:
+    from horde import Zombie
 
 WaitCalculator = NewType("WaitCalculator", Callable[[], float])
 
@@ -9,7 +14,7 @@ def between(min_wait: float, max_wait: float) -> WaitCalculator:
     """
     Wait for a random amount of time between two amounts.
     """
-    def _determine_wait() -> float:
+    def _determine_wait(zombie: Zombie) -> float:
         return random.uniform(min_wait, max_wait)
 
     return _determine_wait
@@ -19,7 +24,7 @@ def seconds(n_seconds: float) -> WaitCalculator:
     """
     Wait a constant amount of time.
     """
-    def _determine_wait() -> float:
+    def _determine_wait(zombie: Zombie) -> float:
         return n_seconds * 1.0
 
     return _determine_wait
@@ -34,7 +39,7 @@ def paced(n_seconds: float) -> WaitCalculator:
     """
     last_called_at = time.perf_counter()
 
-    def _determine_wait() -> float:
+    def _determine_wait(zombie: Zombie) -> float:
         nonlocal last_called_at
 
         elapsed = time.perf_counter() - last_called_at

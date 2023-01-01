@@ -40,6 +40,7 @@ class HTTPXZombie(Zombie):
         await r.aread()
 
         metadata = {
+            "zombie": self,
             "request": r.request,
             "response": r,
             "request_url": r.request.url,

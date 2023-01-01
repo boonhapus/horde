@@ -1,12 +1,12 @@
 from __future__ import annotations
 import asyncio
 
-from horde.user_interfaces import PrinterUI
+from horde.user_interfaces import PrinterUI, TerminalUI
 from horde.runners import LocalRunner
-from horde import Zombie
 
 from horde._recorder import StatsRecorder
 from horde._runner import Runner
+from horde._zombie import Zombie
 from horde._event import EventBus
 from horde._util import ArbitraryState, AttributeDict
 from horde._ui import UI
@@ -20,7 +20,7 @@ class Environment:
         self.zombie_classes = [] if zombie_classes is None else zombie_classes
         self.shared_state = ArbitraryState()
         self.events = EventBus(loop=self._loop)
-        self.runner = None
+        self.runner: Runner = None
         self.stats: AttributeDict[str, StatsRecorder] = AttributeDict()
         self.ui: AttributeDict[str, UI] = AttributeDict()
 
@@ -48,7 +48,7 @@ class Environment:
     def create_ui(self, ui_type: str | UI, *, ui_name: str = None, **passthru) -> UI:
         interfaces = {
             "printer": PrinterUI,
-            # "terminal": TerminalUI,
+            "terminal": TerminalUI,
             # "web": WebUI,
         }
 

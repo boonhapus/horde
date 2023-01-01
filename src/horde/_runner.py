@@ -37,36 +37,40 @@ class Runner:
         return self.state == RunnerState.spawning
 
     @property
+    def is_despawning(self) -> bool:
+        return self.state == RunnerState.despawning
+
+    @property
     def is_stopping(self) -> bool:
         return self.state == RunnerState.stopping
 
     async def _spawner(self, policy: SpawnPolicy, rate: float) -> None:
-        initial_spawn = 0
+        total_zombies_spawned = 0
         initial_spawn_complete = False
         semaphore = asyncio.Semaphore(self.max_concurrent_zombies)
 
-        for idx, zombie_cls in enumerate(policy, start=1):
+        for iteration, (zombie_cls, n_zombies) in enumerate(policy, start=1):
             if not (self.is_spawning or self.is_running):
                 break
 
-            await semaphore.acquire()
-            zombie = zombie_cls(self.environment, zombie_id=idx)
-            t = self.environment._loop.create_task(zombie.run(semaphore))
-            t.__horde_zombie__ = zombie
-            self.environment.events.fire(horde.events.EVT_SPAWN_ZOMBIE)
+            for _ in range(n_zombies):
+                await semaphore.acquire()
+                total_zombies_spawned += 1
 
-            # add it to the internal tasks queue
-            self._running_tasks.add(t)
-            self._running_zombies.add(zombie)
+                zombie = zombie_cls(self.environment, zombie_id=total_zombies_spawned)
+                t = self.environment._loop.create_task(zombie._run(semaphore))
+                t.__horde_zombie__ = zombie
+                self.environment.events.fire(horde.events.EVT_SPAWN_ZOMBIE, zombie=zombie)
 
-            # remove it once the worker is done
-            t.add_done_callback(lambda t: self._running_tasks.discard(t))
-            t.add_done_callback(lambda t: self._running_zombies.discard(t.__horde_zombie__))
+                # add it to the internal tasks queue
+                self._running_zombies.add(zombie)
+                self._running_tasks.add(t)
 
-            if not initial_spawn_complete:
-                initial_spawn += 1
+                # remove it once the worker is done
+                t.add_done_callback(lambda t: self._running_tasks.discard(t))
+                t.add_done_callback(lambda t: self._running_zombies.discard(t.__horde_zombie__))
 
-                if initial_spawn >= self.max_concurrent_zombies:
+                if not initial_spawn_complete and total_zombies_spawned >= self.max_concurrent_zombies:
                     initial_spawn_complete = True
                     self.environment.events.fire(horde.events.EVT_SPAWN_COMPLETE)
                     self.state = RunnerState.running
