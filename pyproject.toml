@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "horde"
-version = "1.0.0a1"
+version = "1.0.0a2"
 description = "a performance testing framework using python asyncio"
 readme = "README.md"
 requires-python = ">=3.7"
