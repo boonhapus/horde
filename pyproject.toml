@@ -36,7 +36,7 @@ repository = "https://github.com/boonhapus/horde"
 bug_tracker = "https://github.com/boonhapus/horde/issues"
 
 [project.optional-dependencies]
-cli = ["typer[all]", "pynput", "httpx"]
+cli = ["typer[all]==0.7.0", "textual", "pynput", "httpx"]
 dev = ["black", "coverage[toml]", "ward"]
 
 [tool.black]
