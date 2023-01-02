@@ -2,7 +2,7 @@ from __future__ import annotations
 import datetime as dt
 import asyncio
 
-from horde.user_interfaces import PrinterUI, TerminalUI
+from horde.user_interfaces.printer import PrinterUI
 from horde.runners import LocalRunner
 
 from horde._recorder import StatsRecorder
@@ -14,8 +14,7 @@ from horde._ui import UI
 
 
 class Environment:
-
-    def __init__(self, host: str, *, zombie_classes: list[Zombie]=None, loop: asyncio.BaseEventLoop=None):
+    def __init__(self, host: str, *, zombie_classes: list[Zombie] = None, loop: asyncio.BaseEventLoop = None):
         self.host = host
         self._loop = loop if loop is not None else asyncio.get_running_loop()
         self.zombie_classes = [] if zombie_classes is None else zombie_classes
@@ -57,7 +56,7 @@ class Environment:
     def create_ui(self, ui_type: str | UI, *, ui_name: str = None, **passthru) -> UI:
         interfaces = {
             "printer": PrinterUI,
-            "terminal": TerminalUI,
+            # "terminal": TerminalUI,
             # "web": WebUI,
         }
 

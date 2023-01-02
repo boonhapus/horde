@@ -5,6 +5,7 @@ from collections.abc import Iterable
 import itertools as it
 import logging
 
+from rich.console import Console
 from rich.layout import Layout
 from rich.align import Align
 from rich.style import Style
@@ -16,7 +17,6 @@ from pynput import keyboard
 from rich import box
 import httpx
 
-from horde.cli._logging import rich_console
 from horde._ui import UI
 from horde.events import SpawnZombie, HTTPZombieRequestComplete, DespawnStart, HordeStop
 import horde
@@ -40,7 +40,13 @@ class ZombieRow:
     """
     Represent a row element in the UI Table.
     """
-    __slots__ = ("_zombie_id", "_zombie_type", "_max_zombies", "data", )
+
+    __slots__ = (
+        "_zombie_id",
+        "_zombie_type",
+        "_max_zombies",
+        "data",
+    )
 
     def __init__(self, zombie_id: int, zombie_type: str, *, max_zombies: int):
         self._zombie_id = zombie_id
@@ -241,13 +247,13 @@ class PrinterUI(UI):
     #
     #
 
-    async def start(self, clear_on_exit: bool = False, **runner_kwargs) -> int:
+    async def start(self, *, clear_on_exit: bool = False, console: Console = Console(), **runner_kwargs) -> int:
         """
         Start the animation.
         """
-        if rich_console.size.width <= 150:
+        if console.size.width <= 150:
             log.warning("Terminal is not wide enough to properly fit the display, please maximize and run again")
-            log.info(f" Current width: {rich_console.size.width: >4}")
+            log.info(f" Current width: {console.size.width: >4}")
             log.info(f"Required width:  150")
             return 1
 
@@ -255,7 +261,7 @@ class PrinterUI(UI):
         kb_listener = keyboard.GlobalHotKeys(self.hotkeys)
         kb_listener.start()
 
-        with Live(self._generate_layout(), console=rich_console, refresh_per_second=20) as display:
+        with Live(self._generate_layout(), console=console, refresh_per_second=20) as display:
             self._display = display
 
             self.horde.events.add_listener(SpawnZombie, listener=self._layout_add_zombie_row)
@@ -272,6 +278,6 @@ class PrinterUI(UI):
         kb_listener.stop()
 
         if clear_on_exit:
-            rich_console.clear()
+            console.clear()
 
         return 0
