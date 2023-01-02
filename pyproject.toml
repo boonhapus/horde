@@ -30,13 +30,21 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 
+dependencies = [
+    "httpx >= 0.23.1",
+    "typer[all] >= 0.7.0",
+    "rich >= 12.6.0",
+    "pynput >= 1.7.6",
+]
+
 
 [project.urls]
 repository = "https://github.com/boonhapus/horde"
 bug_tracker = "https://github.com/boonhapus/horde/issues"
 
+
 [project.optional-dependencies]
-cli = ["typer[all]==0.7.0", "textual", "pynput", "httpx"]
+cli = ["textual >= 0.8.2"]
 dev = ["black", "coverage[toml]", "ward"]
 
 [tool.black]
