@@ -34,7 +34,7 @@ class Runner:
 
     @property
     def runtime(self) -> dt.timedelta:
-        return dt.timedelta(seconds=horde._compat.get_time() - self._horde_started_at)
+        return dt.timedelta(seconds=int(horde._compat.get_time() - self._horde_started_at))
 
     @property
     def is_inactive(self) -> bool:
