@@ -42,15 +42,13 @@ class ZombieRow:
     """
 
     __slots__ = (
-        "_zombie_id",
-        "_zombie_type",
+        "_zombie",
         "_max_zombies",
         "data",
     )
 
-    def __init__(self, zombie_id: int, zombie_type: str, *, max_zombies: int):
-        self._zombie_id = zombie_id
-        self._zombie_type = zombie_type
+    def __init__(self, zombie: "Zombie", *, max_zombies: int):
+        self._zombie = zombie
         self._max_zombies = max_zombies
         self.data: list[HTTPZombieRequestComplete] = []
 
@@ -78,8 +76,8 @@ class ZombieRow:
                 error, *_ = str(row.exception).split("\n")
 
         data = {
-            "zombie_name": f":zombie: [green]#{self._zombie_id: >{pad}}[/]",
-            "zombie_type": self._zombie_type,
+            "zombie_name": f":zombie: [green]#{self._zombie.zombie_id: >{pad}}[/]",
+            "zombie_type": self._zombie.name,
             "last_request": self.data[-1].request_start_time.strftime("%H:%M:%S") if self.data else "Never",
             "last_error": error,
             "requests": requests,
@@ -170,10 +168,7 @@ class PrinterUI(UI):
         self.update()
 
     def _layout_add_zombie_row(self, event: horde.Event) -> None:
-        zombie_id = event.zombie.zombie_id
-        zombie_type = event.zombie.__class__.__name__
-
-        self._data[event.zombie.zombie_id] = ZombieRow(zombie_id, zombie_type, max_zombies=self.max_concurrent_zombies)
+        self._data[event.zombie.zombie_id] = ZombieRow(event.zombie, max_zombies=self.max_concurrent_zombies)
         self.update()
 
     def _layout_update_zombie_row(self, event: horde.Event) -> None:

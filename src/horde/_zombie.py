@@ -29,6 +29,10 @@ class Zombie:
         self._process_zombie_for_tasks()
 
     @property
+    def name(self) -> str:
+        return getattr(self, "_name", self.__class__.__name__)
+
+    @property
     def state(self) -> ZombieState:
         return self._state
 
