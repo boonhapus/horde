@@ -1,4 +1,5 @@
 from __future__ import annotations
+import datetime as dt
 import asyncio
 
 from horde.user_interfaces import PrinterUI, TerminalUI
@@ -23,6 +24,14 @@ class Environment:
         self.runner: Runner = None
         self.stats: AttributeDict[str, StatsRecorder] = AttributeDict()
         self.ui: AttributeDict[str, UI] = AttributeDict()
+        self._horde_init_time: int = 0
+
+    @property
+    def runtime(self) -> dt.timedelta:
+        """
+        Runtime of the Horde.
+        """
+        return self.runner.runtime
 
     def create_stats_recorder(self) -> None:
         self.stats["memory"] = stats = StatsRecorder(self)

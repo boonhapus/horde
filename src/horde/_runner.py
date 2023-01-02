@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import functools as ft
+import datetime as dt
 import warnings
 import logging
 import asyncio
@@ -8,6 +9,7 @@ import asyncio
 from horde.spawn_policy import RoundRobinSpawnPolicy
 from horde._state import RunnerState
 from horde.errors import StopZombie
+import horde._compat
 import horde.events
 
 if TYPE_CHECKING:
@@ -28,6 +30,11 @@ class Runner:
         self._running_zombies = {}
         self._horde_is_running_event = asyncio.Event()
         self._max_zombies_semaphore: asyncio.Semaphore = None
+        self._horde_started_at: dt.timedelta = 0
+
+    @property
+    def runtime(self) -> dt.timedelta:
+        return dt.timedelta(seconds=horde._compat.get_time() - self._horde_started_at)
 
     @property
     def is_inactive(self) -> bool:
@@ -125,6 +132,7 @@ class Runner:
         if not self.is_inactive:
             return
 
+        self._horde_started_at = horde._compat.get_time()
         futures = self.environment.events.fire(horde.events.HordeInit(source=self))
         await asyncio.gather(*futures)
 

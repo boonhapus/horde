@@ -1,4 +1,9 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import asyncio
+
+if TYPE_CHECKING:
+    from horde.environment import Environment
 
 
 class UI:
@@ -9,3 +14,7 @@ class UI:
     @property
     def loop(self) -> asyncio.BaseEventLoop:
         return self.environment._loop
+    
+    @property
+    def horde(self) -> Environment:
+        return self.environment

@@ -1,14 +1,12 @@
-import statistics
-import datetime as dt
+import traceback
 import logging
 import pathlib
 import enum
-import json
 
-from pynput import keyboard
-from typer import Typer, Context, Argument, Option
+from typer import Typer, Context, Argument, Option, Exit
 
 from horde.cli._logging import rich_console, setup_logging
+from horde.environment import Environment
 from horde.cli._async import typer_async_hack
 from horde import Zombie
 import horde.events
@@ -16,6 +14,12 @@ import horde.events
 log = logging.getLogger(__name__)
 app = Typer(
     name="horde",
+    help=(
+        "Join the Horde! 🧟"
+        "\n\n"
+        "horde is a performance testing framework written on top of asyncio."
+    ),
+    options_metavar="[--option, ..., --help]",
     add_completion=False,
     no_args_is_help=True,
     context_settings={
@@ -28,8 +32,8 @@ app = Typer(
 
 class UIType(enum.Enum):
     headless = "headless"
-    terminal = "terminal"
-    website = "website"
+    # terminal = "terminal"
+    # website = "website"  # coming soon ;~)
 
 
 def _collect_zombies(zombie_fp: pathlib.Path) -> list[Zombie]:
@@ -50,17 +54,25 @@ def _collect_zombies(zombie_fp: pathlib.Path) -> list[Zombie]:
     return zombies_classes
 
 
-async def _handle_exception(**kw):
-    print(kw)
+def _mute_our_rich_handler() -> None:
+    rich_handler = next(h for h in logging.getLogger().handlers if hasattr(h, "console") and h.console == rich_console)
+    rich_handler.setLevel(logging.CRITICAL)
 
 
-@app.command(options_metavar="[--option, ..., --help]", context_settings=app.info.context_settings)
+def _handle_exception(event: horde.events.Event) -> None:
+    print(
+        f"Unhandled error in Zombie #{event.zombie.zombie_id} -> {event.zombie_task.__name__}()"
+        f"\n{traceback.print_exception(type(event.exception), event.exception, event.exception.__traceback__)}"
+    )
+
+
+@app.command(help=app.info.help, context_settings=app.info.context_settings)
 @typer_async_hack
 async def main(
     ctx: Context,
     zombie: pathlib.Path = Argument(
         ...,
-        help=".py script to import, containing a Zombie test strategy",
+        help=".py script to import, containing Zombie testing strategies",
         show_default=False,
         dir_okay=False,
     ),
@@ -106,64 +118,72 @@ async def main(
         rich_help_panel="Zombie Spawner Options",
     ),
 ):
-    now = dt.datetime.now()
-    setup_logging(level_no=verbosity, data_directory=output_directory, include_console=ui_type == UIType.headless)
+    setup_logging(level_no=verbosity, data_directory=output_directory)
 
-    env = horde.Environment(url, zombie_classes=_collect_zombies(zombie))
+    # ====================================================[ SETUP ]====================================================
+
+    env = Environment(url, zombie_classes=_collect_zombies(zombie))
     env.create_runner("local")
     env.create_stats_recorder()
-    env.events.add_listener(horde.events.EVT_ERROR_IN_ZOMBIE, listener=_handle_exception)
+    env.events.add_listener(horde.events.ErrorInZombieTask, listener=_handle_exception)
+
+    # ===============================================[ USER INTERFACES ]===============================================
+
+    runner_kw = {"number_of_zombies": n_zombies, "spawn_rate": spawn_rate, "total_execution_time": runtime_seconds}
 
     if ui_type == UIType.headless:
+        env.create_ui("printer")
+        exit_code = await env.ui.printer.start(**runner_kw)
 
-        def _handle_quit():
-            log.info("[b green]Q[/] was pressed! Stopping the Horde test..")
-            env._loop.create_task(env.runner.stop())
+    # coming soon!
+    #
+    # if ui_type == UIType.terminal:
+    #     # terminal UI will cover the existing rich.console, let's mute it
+    #     _mute_our_rich_handler()
 
-        kb_listener = keyboard.GlobalHotKeys({"q": _handle_quit})
-        kb_listener.start()
+    #     env.create_ui(UIType.terminal.value)
+    #     await env.ui.terminal.start(**runner_kw)
 
-        env.create_ui("printer", print_fn=log.debug)
+    # if ui_type == UIType.website:
+    #     env.create_ui("website", output_directory=output_directory)
+    #     await env.ui.website.start()
 
-        with rich_console.status("no [b blue]runtime[/] was set, running forever.. press [b green]Q[/] to stop!"):
-            kw = {"number_of_zombies": n_zombies, "spawn_rate": spawn_rate, "total_execution_time": runtime_seconds}
-            await env.runner.start(**kw)
-            await env.runner.join()
+    # ===============================================[ STATS RECORDERS ]===============================================
 
-        kb_listener.stop()
+    # for stats, recorder in env.stats.items():
+    #     if recorder.should_save:
+    #         recorder.dump(output_directory)
 
-        if output_directory is not None:
-            date_fmt = "%Y_%m_%dT%H-%M-%S"
-            events = json.dumps(env.stats.memory.all(cast=str), indent=4)
-            output_directory.joinpath(f"horde_run_{now:{date_fmt}}_all_events.json").write_text(events)
+    #
+    # Basic example
+    # 
 
-            events = json.dumps(env.stats.memory.filter(horde.events.EVT_REQUEST_COMPLETE, cast=str), indent=4)
-            output_directory.joinpath(f"horde_run_{now:{date_fmt}}_http_requests.json").write_text(events)
+    # now = dt.datetime.now()
 
-        stats = env.stats.memory.filter(horde.events.EVT_REQUEST_COMPLETE)
-        min_time = stats[0]['request_start_time']
-        max_time = stats[-1]['request_start_time'] + stats[-1]['response_elapsed_time']
+    # if output_directory is not None:
+    #     date_fmt = "%Y_%m_%dT%H-%M-%S"
+    #     events = json.dumps(env.stats.memory.all(cast=str), indent=4)
+    #     output_directory.joinpath(f"horde_run_{now:{date_fmt}}_all_events.json").write_text(events)
 
-        errors = [str(_["error"]).split("\n")[0] for _ in stats if _['exception'] is not None]
-        errors_str = "\n\t- " + "\n\t- ".join(errors)
+    #     events = json.dumps(env.stats.memory.filter(horde.events.EVT_REQUEST_COMPLETE, cast=str), indent=4)
+    #     output_directory.joinpath(f"horde_run_{now:{date_fmt}}_http_requests.json").write_text(events)
 
-        log.info(
-            f"=== [PERFORMANCE RUN STATISTICS] ==="
-            f"\n       requests made: {len(stats): >3}"
-            f"\n      execution time: {(max_time - min_time).total_seconds(): >6.2f}s"
-            f"\n     latency average: {statistics.fmean([_['response_elapsed_time'].total_seconds() for _ in stats]): >6.2f}s"
-            f"\n          error rate: {len([_ for _ in stats if _['exception']]) / len(stats): >6.2f}%"
-            f"\n              errors: {errors_str if errors else 'None'}"
-            f"\n===================================="
-            f"\n"
-        )
+    # stats = env.stats.memory.filter(horde.events.EVT_REQUEST_COMPLETE)
+    # min_time = stats[0]['request_start_time']
+    # max_time = stats[-1]['request_start_time'] + stats[-1]['response_elapsed_time']
 
-    elif ui_type == UIType.terminal:
-        env.create_ui(UIType.terminal.value)
+    # errors = [str(_["error"]).split("\n")[0] for _ in stats if _['exception'] is not None]
+    # errors_str = "\n\t- " + "\n\t- ".join(errors)
 
-        kw = {"number_of_zombies": n_zombies, "spawn_rate": spawn_rate, "total_execution_time": runtime_seconds}
-        await env.ui.terminal.start(**kw)
+    # log.info(
+    #     f"=== [PERFORMANCE RUN STATISTICS] ==="
+    #     f"\n       requests made: {len(stats): >3}"
+    #     f"\n      execution time: {(max_time - min_time).total_seconds(): >6.2f}s"
+    #     f"\n     latency average: {statistics.fmean([_['response_elapsed_time'].total_seconds() for _ in stats]): >6.2f}s"
+    #     f"\n          error rate: {len([_ for _ in stats if _['exception']]) / len(stats): >6.2f}%"
+    #     f"\n              errors: {errors_str if errors else 'None'}"
+    #     f"\n===================================="
+    #     f"\n"
+    # )
 
-    else:
-        env.create_ui("website", output_directory=output_directory)
-        await env.ui.website.start()
+    raise Exit(code=exit_code)

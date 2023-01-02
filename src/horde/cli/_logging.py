@@ -23,7 +23,7 @@ def _monkeypatch_logging_trace():
     setattr(logging, "trace", _log_to_root)
 
 
-def setup_logging(*, level_no: int, data_directory: pathlib.Path=None, include_console: bool=False) -> None:
+def setup_logging(*, level_no: int, data_directory: pathlib.Path=None) -> None:
     # 40 --> ERROR
     # 30 --> WARNING
     # 20 --> INFO
@@ -56,19 +56,18 @@ def setup_logging(*, level_no: int, data_directory: pathlib.Path=None, include_c
         }
     }
 
-    if include_console:
-        config["root"]["handlers"].append("to_console")
-        config["handlers"]["to_console"] = {
-            "formatter": "shell",
-            'level': level,
-            'class': 'rich.logging.RichHandler',
-            # rich.__init__ params...
-            'console': rich_console,
-            'show_level': True,
-            'rich_tracebacks': True,
-            'markup': True,
-            'log_time_format': '[%X]'
-        }
+    config["root"]["handlers"].append("to_console")
+    config["handlers"]["to_console"] = {
+        "formatter": "shell",
+        'level': level,
+        'class': 'rich.logging.RichHandler',
+        # rich.__init__ params...
+        'console': rich_console,
+        'show_level': True,
+        'rich_tracebacks': True,
+        'markup': True,
+        'log_time_format': '[%X]'
+    }
 
     if data_directory is not None:
         logs_dir = pathlib.Path(data_directory) / 'logs'
