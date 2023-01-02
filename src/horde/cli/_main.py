@@ -14,11 +14,7 @@ import horde.events
 log = logging.getLogger(__name__)
 app = Typer(
     name="horde",
-    help=(
-        "Join the Horde! 🧟"
-        "\n\n"
-        "horde is a performance testing framework written on top of asyncio."
-    ),
+    help=("Join the Horde! 🧟" "\n\n" "horde is a performance testing framework written on top of asyncio."),
     options_metavar="[--option, ..., --help]",
     add_completion=False,
     no_args_is_help=True,
@@ -77,42 +73,52 @@ async def main(
         dir_okay=False,
     ),
     ui_type: UIType = Option(
-        "headless", "--user-interface", "-i",
+        "headless",
+        "--user-interface",
+        "-i",
         help="which type of interface to run",
         show_default=True,
     ),
     verbosity: int = Option(
-        0, "--verbose", "-v",
+        0,
+        "--verbose",
+        "-v",
         metavar="",
         help="verbosity level of logs, can be included multiple times",
         show_default=False,
         count=True,
     ),
     output_directory: pathlib.Path = Option(
-        None, "--output-dir", "-d",
+        None,
+        "--output-dir",
+        "-d",
         help="folder to write logs and test reports to - if ommitted, don't save data",
         file_okay=False,
     ),
     url: str = Option(
-        ..., "--url",
+        ...,
+        "--url",
         help="hostname to load test against",
         show_default=False,
         rich_help_panel="Zombie Spawner Options",
     ),
     n_zombies: int = Option(
-        ..., "--zombies",
+        ...,
+        "--zombies",
         help="total number of zombies to spawn",
         show_default=False,
         rich_help_panel="Zombie Spawner Options",
     ),
     spawn_rate: int = Option(
-        1, "--spawn-rate",
+        1,
+        "--spawn-rate",
         help="how many zombies to spawn each second",
         show_default=True,
         rich_help_panel="Zombie Spawner Options",
     ),
     runtime_seconds: float = Option(
-        None, "--runtime",
+        None,
+        "--runtime",
         help="seconds to run the test for - if omitted, run forever",
         show_default=False,
         rich_help_panel="Zombie Spawner Options",
@@ -133,7 +139,7 @@ async def main(
 
     if ui_type == UIType.headless:
         env.create_ui("printer")
-        exit_code = await env.ui.printer.start(**runner_kw)
+        exit_code = await env.ui.printer.start(console=rich_console, **runner_kw)
 
     # coming soon!
     #
@@ -156,7 +162,7 @@ async def main(
 
     #
     # Basic example
-    # 
+    #
 
     # now = dt.datetime.now()
 

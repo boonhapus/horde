@@ -9,6 +9,7 @@ class SpawnPolicy:
     """
     Spawn policies represent an infinite iterator.
     """
+
     def __init__(self, zombie_classes: list[Zombie]):
         self.zombie_classes = zombie_classes
 
@@ -20,8 +21,7 @@ class SpawnPolicy:
 
 
 class RoundRobinSpawnPolicy(SpawnPolicy):
-    """
-    """
+    """ """
 
     def __init__(self, zombie_classes: list[Zombie], *, sort_key: Callable = None):
         if sort_key is None:
@@ -31,6 +31,5 @@ class RoundRobinSpawnPolicy(SpawnPolicy):
         self._actual_iterator = it.cycle(sorted(self.zombie_classes, key=sort_key))
 
     def shape(self) -> tuple[Zombie, int]:
-        """
-        """
+        """ """
         return next(self._actual_iterator), 1

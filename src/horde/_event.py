@@ -16,7 +16,11 @@ class EventHook:
     """
     A mechanism to tie Horde work to Events.
     """
-    __slots__ = ("event_cls", "handlers", )
+
+    __slots__ = (
+        "event_cls",
+        "handlers",
+    )
 
     def __init__(self, event: horde.events.Event, handlers: list[Callable] = None):
         self.event_cls = event
@@ -38,6 +42,7 @@ class EventBus:
 
     All actions in the horde trigger an event.
     """
+
     def __init__(self, loop):
         self._loop = loop
         self._hooks = {event.name: EventHook(event) for event in horde.events._registered_event_types}

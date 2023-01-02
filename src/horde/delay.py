@@ -14,6 +14,7 @@ def between(min_wait: float, max_wait: float) -> WaitCalculator:
     """
     Wait for a random amount of time between two amounts.
     """
+
     def _determine_wait(zombie: Zombie) -> float:
         return random.uniform(min_wait, max_wait)
 
@@ -24,6 +25,7 @@ def seconds(n_seconds: float) -> WaitCalculator:
     """
     Wait a constant amount of time.
     """
+
     def _determine_wait(zombie: Zombie) -> float:
         return n_seconds * 1.0
 

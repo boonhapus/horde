@@ -19,8 +19,7 @@ log = logging.getLogger(__name__)
 
 
 class Runner:
-    """
-    """
+    """ """
 
     def __init__(self, environment):
         self.environment = environment

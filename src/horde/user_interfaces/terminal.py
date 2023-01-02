@@ -11,8 +11,7 @@ import horde.events
 
 
 class HordeHeader(Widget):
-    """
-    """
+    """ """
 
     DEFAULT_CSS = """
     HordeHeader {
@@ -158,7 +157,7 @@ class TUI(App):
             horde.events.InitialSpawnComplete,
             horde.events.DespawnStart,
             horde.events.DespawnComplete,
-            horde.events.HordeStop
+            horde.events.HordeStop,
         ):
             self.horde.events.add_listener(event, listener=self._update_horde_state)
 
@@ -176,7 +175,6 @@ class TUI(App):
 
 
 class TerminalUI(UI):
-
     def __init__(self, environment):
         super().__init__(environment)
         self.tui = TUI(environment)

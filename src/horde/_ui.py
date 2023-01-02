@@ -7,14 +7,13 @@ if TYPE_CHECKING:
 
 
 class UI:
-
     def __init__(self, environment):
         self.environment = environment
 
     @property
     def loop(self) -> asyncio.BaseEventLoop:
         return self.environment._loop
-    
+
     @property
     def horde(self) -> Environment:
         return self.environment

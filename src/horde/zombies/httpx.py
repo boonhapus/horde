@@ -8,8 +8,7 @@ import horde.events
 
 
 class HTTPXZombie(Zombie):
-    """
-    """
+    """ """
 
     def __init__(self, environment, zombie_id: int):
         super().__init__(environment, zombie_id)

@@ -16,8 +16,8 @@ log = logging.getLogger(__name__)
 
 
 class Zombie:
-    """
-    """
+    """ """
+
     stop_on_error: bool = False
     task_delay: delay.WaitCalculator = delay.seconds(0.0)
 
@@ -51,7 +51,7 @@ class Zombie:
             #
             # That SOUNDS like a descriptor to me, but I'm not able to figure out how to
             # make it work. :(
-            # 
+            #
             zombie_task = member.__zombie_task__.copy(fn=member)
             self._tasks.append(zombie_task)
 
@@ -87,7 +87,7 @@ class Zombie:
                         zombie_task=zombie_task,
                         start_time=now,
                         elapsed=dt.timedelta(seconds=horde._compat.get_time() - start),
-                        result=r
+                        result=r,
                     )
                 )
 
@@ -104,7 +104,7 @@ class Zombie:
                         zombie_task=zombie_task,
                         start_time=now,
                         elapsed=dt.timedelta(seconds=horde._compat.get_time() - start),
-                        exception=e
+                        exception=e,
                     )
                 )
 
@@ -132,7 +132,7 @@ class Zombie:
         await asyncio.sleep(self.task_delay())
         self.state = ZombieState.running
 
-    def stop(self, force: bool=False) -> None:
+    def stop(self, force: bool = False) -> None:
         self.state = ZombieState.stopping
 
         if force:

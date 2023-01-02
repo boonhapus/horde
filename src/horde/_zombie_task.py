@@ -9,6 +9,7 @@ class ZombieTask:
     """
     Work for a Zombie to do.
     """
+
     __slots__ = ("fn", "weight", "_loop")
 
     def __init__(self, fn: Callable, weight: int = 1):
@@ -51,7 +52,8 @@ class ZombieTask:
 #
 #
 
-def task(fn: Callable=None, *, weight: int=1):
+
+def task(fn: Callable = None, *, weight: int = 1):
     """
     Mark this function as a Zombie task.
     """

@@ -16,7 +16,11 @@ class Event:
     """
     Base class for all Horde events.
     """
-    __slots__ = ("source", "_created_at", )
+
+    __slots__ = (
+        "source",
+        "_created_at",
+    )
 
     def __init__(self, source):
         self.source = source
@@ -42,7 +46,8 @@ class Any(Event):
     """
     Sent along with any of the below events.
     """
-    __slots__ = ("fired_event", )
+
+    __slots__ = ("fired_event",)
 
     def __init__(self, source: typing.Any, fired_event: Event):
         super().__init__(source)
@@ -65,7 +70,8 @@ class SpawnZombie(Event):
     """
     Sent when the Horde runner spawns a Zombie.
     """
-    __slots__ = ("zombie", )
+
+    __slots__ = ("zombie",)
 
     def __init__(self, source: Any, zombie: horde.Zombie):
         super().__init__(source)
@@ -94,7 +100,12 @@ class ZombieTaskBegin(Event):
     """
     Sent when a ZombieTask starts.
     """
-    __slots__ = ("zombie", "zombie_task", "start_time", )
+
+    __slots__ = (
+        "zombie",
+        "zombie_task",
+        "start_time",
+    )
 
     def __init__(self, source: Any, zombie: horde.Zombie, zombie_task: horde.ZombieTask, start_time: dt.datetime):
         super().__init__(source)
@@ -107,15 +118,23 @@ class ZombieTaskFinish(Event):
     """
     Sent when a ZombieTask ends.
     """
-    __slots__ = ("zombie", "zombie_task", "start_time", "elapsed", "result", )
 
-    def __init__(self,
+    __slots__ = (
+        "zombie",
+        "zombie_task",
+        "start_time",
+        "elapsed",
+        "result",
+    )
+
+    def __init__(
+        self,
         source: Any,
         zombie: horde.Zombie,
         zombie_task: horde.ZombieTask,
         start_time: dt.datetime,
         elapsed: dt.timedelta,
-        result: Any
+        result: Any,
     ):
         super().__init__(source)
         self.zombie = zombie
@@ -129,15 +148,23 @@ class ErrorInZombieTask(Event):
     """
     Sent when a ZombieTask ends.
     """
-    __slots__ = ("zombie", "zombie_task", "start_time", "elapsed", "exception", )
 
-    def __init__(self,
+    __slots__ = (
+        "zombie",
+        "zombie_task",
+        "start_time",
+        "elapsed",
+        "exception",
+    )
+
+    def __init__(
+        self,
         source: Any,
         zombie: horde.Zombie,
         zombie_task: horde.ZombieTask,
         start_time: dt.datetime,
         elapsed: dt.timedelta,
-        exception: Exception
+        exception: Exception,
     ):
         super().__init__(source)
         self.zombie = zombie
@@ -151,9 +178,16 @@ class HTTPZombieRequestComplete(Event):
     """
     Sent when a HTTPZombie receives a server response.
     """
+
     __slots__ = (
-        "zombie", "request", "response", "request_url", "request_start_time", "response_elapsed_time",
-        "response_length", "exception", 
+        "zombie",
+        "request",
+        "response",
+        "request_url",
+        "request_start_time",
+        "response_elapsed_time",
+        "response_length",
+        "exception",
     )
 
     def __init__(

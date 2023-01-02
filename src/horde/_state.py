@@ -5,6 +5,7 @@ class RunnerState(enum.Enum):
     """
     Represents the state of a Runner.
     """
+
     inactive = "INACTIVE"
     spawning = "SPAWNING"
     running = "RUNNING"
@@ -16,6 +17,7 @@ class ZombieState(enum.Enum):
     """
     Represents the state of a User.
     """
+
     inactive = "INACTIVE"
     starting = "RUNNING"
     running = "RUNNING"

@@ -6,7 +6,7 @@ import re
 def camel_to_snake(name: str, _re_snake: Pattern[str] = re.compile("[a-z][A-Z]")) -> str:
     """
     Convert name from CamelCase to snake_case.
-    
+
     Parameters
     ----------
     name: str
@@ -26,12 +26,13 @@ class AttributeDict(dict):
     """
     A mapping that allows for attribute-style access of values.
     """
+
     def _is_valid_key_name(cls, key: str) -> bool:
         is_a_string = isinstance(key, str)
         is_an_identifier = str(key).isidentifier()
         builtin_dict_names = hasattr(cls, key)
 
-        return (is_a_string and is_an_identifier and not builtin_dict_names)
+        return is_a_string and is_an_identifier and not builtin_dict_names
 
     def _convert(self, obj):
         if isinstance(obj, Mapping):
