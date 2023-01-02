@@ -100,7 +100,7 @@ class PrinterUI(UI):
         }
         self._data: dict[str, ZombieRow] = {}
         self._display: Live = None
-        self._zombies_on_display = 10
+        self._zombies_on_display = 25
 
     @property
     def horde_state(self) -> str:
@@ -195,7 +195,7 @@ class PrinterUI(UI):
         table.add_column("Error (%)", justify="right", footer_style=HORDE_GREEN)
 
         total = {"requests": [], "errors": [], "average_latency_s": [], "error_rate": []}
-        top_n = take(self._zombies_on_display, sorted(self._data.values(), key=lambda zr: len(zr.data)))
+        top_n = take(self._zombies_on_display, sorted(self._data.values(), key=lambda zr: len(zr.data), reverse=True))
 
         for zombie_row in top_n:
             data = zombie_row.generate_row_data()
