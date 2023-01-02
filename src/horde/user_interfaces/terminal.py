@@ -7,8 +7,7 @@ from textual.widget import Widget
 from textual.app import App, ComposeResult
 
 from horde._ui import UI
-from horde.events import EVT_SPAWN_ZOMBIE, EVT_REQUEST_COMPLETE
-from horde.events import EVT_INIT, EVT_SPAWN_START, EVT_SPAWN_COMPLETE, EVT_DESPAWN_START, EVT_DESPAWN_COMPLETE, EVT_STOP
+import horde.events
 
 
 class HordeHeader(Widget):
@@ -86,7 +85,6 @@ class TUI(App):
 
     def __init__(self, environment, *a, **kw):
         super().__init__(*a, **kw)
-        self.horde = environment
 
     def compose(self) -> ComposeResult:
         """Called to add widgets to the app."""
@@ -150,11 +148,18 @@ class TUI(App):
         if not self.horde.runner.is_inactive:
             return
 
-        self.horde.events.add_listener(EVT_SPAWN_ZOMBIE, listener=self._update_zombies)
-        self.horde.events.add_listener(EVT_REQUEST_COMPLETE, listener=self._update_requests)
+        self.horde.events.add_listener(horde.events.SpawnZombie, listener=self._update_zombies)
+        self.horde.events.add_listener(horde.events.HTTPZombieRequestComplete, listener=self._update_requests)
         # self.horde.events.add_listener(EVT_REQUEST_COMPLETE, listener=self._update_data_table)
 
-        for event in (EVT_INIT, EVT_SPAWN_START, EVT_SPAWN_COMPLETE, EVT_DESPAWN_START, EVT_DESPAWN_COMPLETE, EVT_STOP):
+        for event in (
+            horde.events.HordeInit,
+            horde.events.InitialSpawnStart,
+            horde.events.InitialSpawnComplete,
+            horde.events.DespawnStart,
+            horde.events.DespawnComplete,
+            horde.events.HordeStop
+        ):
             self.horde.events.add_listener(event, listener=self._update_horde_state)
 
         coro = self.horde.runner.start(**self._horde_runner_kwargs)

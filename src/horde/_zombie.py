@@ -1,5 +1,6 @@
 from __future__ import annotations
 import functools as ft
+import datetime as dt
 import asyncio
 import inspect
 import logging
@@ -8,6 +9,7 @@ import random
 from horde._state import ZombieState
 from horde.errors import StopZombie
 from horde import delay
+import horde._compat
 import horde.events
 
 log = logging.getLogger(__name__)
@@ -25,6 +27,17 @@ class Zombie:
         self._state = ZombieState.inactive
         self._tasks = []
         self._process_zombie_for_tasks()
+
+    @property
+    def state(self) -> ZombieState:
+        return self._state
+
+    @state.setter
+    def state(self, new_state) -> None:
+        if new_state not in (ZombieState.stopping, ZombieState.stopped):
+            self._check_if_stopping()
+
+        self._state = new_state
 
     def _process_zombie_for_tasks(self) -> None:
         is_zombie_task = ft.partial(lambda member: hasattr(member, "__zombie_task__"))
@@ -46,52 +59,61 @@ class Zombie:
         if self._state == ZombieState.stopping or self.environment.runner.is_despawning:
             raise StopZombie()
 
-    async def _run(self, max_zombies_semaphore: asyncio.Semaphore) -> None:
+    async def _run(self) -> None:
 
-        try:
-            self._check_if_stopping()
-            self._state = ZombieState.starting
-            await self.on_start()
-            self._check_if_stopping()
-            self._state = ZombieState.running
+        self.state = ZombieState.starting
+        await self.on_start()
+        self.state = ZombieState.running
 
-            while self._tasks:
-                try:
-                    self._check_if_stopping()
-                    zombie_task, *_ = random.choices(self._tasks, [t.weight for t in self._tasks], k=1)
-                    self.environment.events.fire(horde.events.EVT_ZOMBIE_TASK_BEGIN)
-                    await zombie_task()
-                    self._check_if_stopping()
-                    self.environment.events.fire(horde.events.EVT_ZOMBIE_TASK_END)
-                    await self.wait()
+        while self._tasks:
+            # gather stats
+            zombie_task, *_ = random.choices(self._tasks, [t.weight for t in self._tasks], k=1)
+            now = dt.datetime.now()
+            start: float = horde._compat.get_time()
 
-                except (StopZombie, asyncio.CancelledError):
+            try:
+                self._check_if_stopping()
+                self.environment.events.fire(
+                    horde.events.ZombieTaskBegin(source=self, zombie=self, zombie_task=zombie_task, start_time=now)
+                )
+
+                r = await zombie_task()
+                self._check_if_stopping()
+
+                self.environment.events.fire(
+                    horde.events.ZombieTaskFinish(
+                        source=self,
+                        zombie=self,
+                        zombie_task=zombie_task,
+                        start_time=now,
+                        elapsed=dt.timedelta(seconds=horde._compat.get_time() - start),
+                        result=r
+                    )
+                )
+
+                await self.wait()
+
+            except (StopZombie, asyncio.CancelledError):
+                break
+
+            except Exception as e:
+                self.environment.events.fire(
+                    horde.events.ErrorInZombieTask(
+                        source=self,
+                        zombie=self,
+                        zombie_task=zombie_task,
+                        start_time=now,
+                        elapsed=dt.timedelta(seconds=horde._compat.get_time() - start),
+                        exception=e
+                    )
+                )
+
+                if self.stop_on_error:
                     break
 
-                except Exception as e:
-                    self.environment.events.fire(horde.events.EVT_ERROR_IN_ZOMBIE, zombie=self, exception=e)
-
-                    if self.stop_on_error:
-                        break
-
-        except (StopZombie, asyncio.CancelledError):
-            pass
-
-        except Exception:
-            log.error(f"error in {self.__class__.__name__}.on_start (#{self.zombie_id}); see logs for details..")
-            log.debug("", exc_info=True)
-
-        finally:
-            if self._state != ZombieState.starting:
-                try:
-                    self._state = ZombieState.stopping
-                    await self.on_stop()
-                except Exception:
-                    log.error(f"error in {self.__class__.__name__}.on_stop (#{self.zombie_id}); see logs for details..")
-                    log.debug("", exc_info=True)
-
-            max_zombies_semaphore.release()
-            self._state = ZombieState.stopped
+        self.state = ZombieState.stopping
+        await self.on_stop()
+        self.state = ZombieState.stopped
 
     async def on_start(self) -> None:
         """
@@ -106,14 +128,12 @@ class Zombie:
         pass
 
     async def wait(self) -> None:
-        self._check_if_stopping()
-        self._state = ZombieState.waiting
+        self.state = ZombieState.waiting
         await asyncio.sleep(self.task_delay())
-        self._check_if_stopping()
-        self._state = ZombieState.running
+        self.state = ZombieState.running
 
     def stop(self, force: bool=False) -> None:
-        self._state = ZombieState.stopping
+        self.state = ZombieState.stopping
 
         if force:
             # reach into the event loop queue and cancel the Zombie & its tasks.

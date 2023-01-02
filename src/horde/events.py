@@ -1,57 +1,184 @@
-# DEFAULT EVENTS
+from __future__ import annotations
+from typing import TYPE_CHECKING
+import datetime as dt
+import typing
 
-__all__ = (
-    "EVT_ANY",
-    "EVT_INIT",
-    "EVT_SPAWN_START",
-    "EVT_SPAWN_ZOMBIE",
-    "EVT_SPAWN_COMPLETE",
-    "EVT_DESPAWN_START",
-    "EVT_DESPAWN_COMPLETE",
-    "EVT_ZOMBIE_TASK_BEGIN",
-    "EVT_ZOMBIE_TASK_END",
-    "EVT_ERROR_IN_ZOMBIE",
-    "EVT_REQUEST_COMPLETE",
-    "EVT_STOP",
-)
+from horde._util import camel_to_snake
+import horde._compat
+
+if TYPE_CHECKING:
+    import horde
+
+_registered_event_types: list[Event] = []
 
 
-# fmt: off
+class Event:
+    """
+    Base class for all Horde events.
+    """
+    __slots__ = ("source", "_created_at", )
 
-EVT_ANY = "any"
-# Fired along with all of the below events. Inherits keywords from all of the below events.
+    def __init__(self, source):
+        self.source = source
+        self._created_at: float = horde._compat.get_time()
 
-EVT_INIT = "init"
-# Fired once a Runner starts.
+    def __init_subclass__(cls):
+        super().__init_subclass__()
+        cls.name = camel_to_snake(cls.__name__)
+        _registered_event_types.append(cls)
 
-EVT_SPAWN_START = "initial_spawn_start"
-# Fired when a Runner begins to spawn Zombies.
+    @property
+    def name(self) -> str:
+        """
+        The name of the event.
+        """
+        return self.__class__.name
 
-EVT_SPAWN_ZOMBIE = "spawn_zombie"
-# Fired when a Runner spawns a Zombie.
+    def __str__(self) -> str:
+        return f"<HordeEvent: '{self.name}' (from {self.source.__name__})>"
 
-EVT_SPAWN_COMPLETE = "initial_spawn_complete"
-# Fired when a Runner completes spawning Zombies.
 
-EVT_DESPAWN_START = "despawn_start"
-# Fired when a Runner stops spawning Zombies, allowing them to despawn.
+class Any(Event):
+    """
+    Sent along with any of the below events.
+    """
+    __slots__ = ("fired_event", )
 
-EVT_DESPAWN_COMPLETE = "despawn_complete"
-# Fired when no more spawned Zombies remain.
+    def __init__(self, source: typing.Any, fired_event: Event):
+        super().__init__(source)
+        self.fired_event = fired_event
 
-EVT_ZOMBIE_TASK_BEGIN = "zombie_task_begin"
-# Fired when a Zombie starts a task.
 
-EVT_ZOMBIE_TASK_END = "zombie_task_end"
-# Fired when a Zombie finishes a task.
+class HordeInit(Event):
+    """
+    Sent when the Horde begins.
+    """
 
-EVT_ERROR_IN_ZOMBIE = "error_in_zombie"
-# Fired when a Zombie encounters an error during a task.
 
-EVT_REQUEST_COMPLETE = "request_complete"
-# Fired when an HTTP-based Zombie complete a web request.
+class InitialSpawnStart(Event):
+    """
+    Sent when the Horde runner beings to spawn Zombies.
+    """
 
-EVT_STOP = "stop"
-# Fired once a Runner stops.
 
-# fmt: on
+class SpawnZombie(Event):
+    """
+    Sent when the Horde runner spawns a Zombie.
+    """
+    __slots__ = ("zombie", )
+
+    def __init__(self, source: Any, zombie: horde.Zombie):
+        super().__init__(source)
+        self.zombie = zombie
+
+
+class InitialSpawnComplete(Event):
+    """
+    Sent when the Horde runner finishes the initial spawn.
+    """
+
+
+class DespawnStart(Event):
+    """
+    Sent when the Horde runner stops spawning Zombies.
+    """
+
+
+class DespawnComplete(Event):
+    """
+    Sent when no Zombies remain.
+    """
+
+
+class ZombieTaskBegin(Event):
+    """
+    Sent when a ZombieTask starts.
+    """
+    __slots__ = ("zombie", "zombie_task", "start_time", )
+
+    def __init__(self, source: Any, zombie: horde.Zombie, zombie_task: horde.ZombieTask, start_time: dt.datetime):
+        super().__init__(source)
+        self.zombie = zombie
+        self.zombie_task = zombie_task
+        self.start_time = start_time
+
+
+class ZombieTaskFinish(Event):
+    """
+    Sent when a ZombieTask ends.
+    """
+    __slots__ = ("zombie", "zombie_task", "start_time", "elapsed", "result", )
+
+    def __init__(self,
+        source: Any,
+        zombie: horde.Zombie,
+        zombie_task: horde.ZombieTask,
+        start_time: dt.datetime,
+        elapsed: dt.timedelta,
+        result: Any
+    ):
+        super().__init__(source)
+        self.zombie = zombie
+        self.zombie_task = zombie_task
+        self.start_time = start_time
+        self.elapsed = elapsed
+        self.result = result
+
+
+class ErrorInZombieTask(Event):
+    """
+    Sent when a ZombieTask ends.
+    """
+    __slots__ = ("zombie", "zombie_task", "start_time", "elapsed", "exception", )
+
+    def __init__(self,
+        source: Any,
+        zombie: horde.Zombie,
+        zombie_task: horde.ZombieTask,
+        start_time: dt.datetime,
+        elapsed: dt.timedelta,
+        exception: Exception
+    ):
+        super().__init__(source)
+        self.zombie = zombie
+        self.zombie_task = zombie_task
+        self.start_time = start_time
+        self.elapsed = elapsed
+        self.exception = exception
+
+
+class HTTPZombieRequestComplete(Event):
+    """
+    Sent when a HTTPZombie receives a server response.
+    """
+    __slots__ = (
+        "zombie", "request", "response", "request_url", "request_start_time", "response_elapsed_time",
+        "response_length", "exception", 
+    )
+
+    def __init__(
+        self,
+        source: Any,
+        request: Any,  # most likely httpx.Request
+        response: Any,  # most likely httpx.Response
+        request_url: str,
+        request_start_time: dt.datetime,
+        response_elapsed_time: dt.timedelta,
+        response_length: int,
+        exception: Exception,  # most likely httpx.HTTPStatusError
+    ):
+        super().__init__(source)
+        self.zombie: horde.Zombie = source
+        self.request = request
+        self.response = response
+        self.request_url = request_url
+        self.request_start_time = request_start_time
+        self.response_elapsed_time = response_elapsed_time
+        self.response_length = response_length
+        self.exception = exception
+
+
+class HordeStop(Event):
+    """
+    Sent when the Horde is called off.
+    """

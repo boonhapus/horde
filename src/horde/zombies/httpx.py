@@ -39,15 +39,15 @@ class HTTPXZombie(Zombie):
         # needed to determin .elapsed and .content
         await r.aread()
 
-        metadata = {
-            "zombie": self,
-            "request": r.request,
-            "response": r,
-            "request_url": r.request.url,
-            "request_start_time": dt.datetime.now() - r.elapsed,
-            "response_elapsed_time": r.elapsed,
-            "response_length": len(r.content or b""),
-            "exception": self._build_error_from_response(r),
-        }
+        event = horde.events.HTTPZombieRequestComplete(
+            source=self,
+            request=r.request,
+            response=r,
+            request_url=r.request.url,
+            request_start_time=dt.datetime.now() - r.elapsed,
+            response_elapsed_time=r.elapsed,
+            response_length=len(r.content or b""),
+            exception=self._build_error_from_response(r),
+        )
 
-        self.environment.events.fire(horde.events.EVT_REQUEST_COMPLETE, **metadata)
+        self.environment.events.fire(event)
