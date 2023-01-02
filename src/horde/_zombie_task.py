@@ -1,28 +1,50 @@
 from __future__ import annotations
-from dataclasses import dataclass
 from typing import Any, Callable
 import functools as ft
 import warnings
+import asyncio
 
-from horde._compat import IS_PY_310_COMPATIBLE
 
-
-@dataclass(slots=IS_PY_310_COMPATIBLE)
 class ZombieTask:
     """
     Work for a Zombie to do.
     """
-    fn: Callable
-    weight: int = 1
+    __slots__ = ("fn", "weight", "_loop")
 
-    def copy(self, fn: Callable) -> ZombieTask:
+    def __init__(self, fn: Callable, weight: int = 1):
+        self.fn = fn
+        self.weight = weight
+        self._loop: asyncio.BaseEventLoop = None
+
+    @property
+    def __name__(self) -> str:
+        return self.fn.__qualname__
+
+    @property
+    def loop(self) -> asyncio.BaseEventLoop:
+        if self._loop is None:
+            self._loop = asyncio.get_running_loop()
+
+        return self._loop
+
+    def copy(self, fn: Callable = None, weight: int = None) -> ZombieTask:
         """
-        Create a new copy of this task, optionally with a new function.
+        Create a new copy of this task.
         """
-        return ZombieTask(fn=fn, weight=self.weight)
+        keywords = {
+            "fn": self.fn if fn is None else fn,
+            "weight": self.weight if weight is None else weight,
+        }
+        return ZombieTask(**keywords)
 
     def __call__(self, *a, **kw) -> Any:
-        return self.fn(*a, **kw)
+        if asyncio.iscoroutinefunction(self.fn):
+            coro = self.fn(*a, **kw)
+        else:
+            func = ft.partial(self.fn, *a, **kw)
+            coro = self.loop.run_in_executor(None, func)
+
+        return coro
 
 
 #
