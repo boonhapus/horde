@@ -187,9 +187,9 @@ class PrinterUI(UI):
         )
 
         table.add_column("Zombie", justify="center")
-        table.add_column("Type", justify="center", width=15)
+        table.add_column("Type", justify="center", width=20)
         table.add_column("Last Request", justify="center")
-        table.add_column("Last Error", justify="center", width=45, no_wrap=True)
+        table.add_column("Last Error", justify="center", width=40, no_wrap=True)
         table.add_column("Requests", justify="right", footer_style=HORDE_GREEN)
         table.add_column("Errors", justify="right", footer_style=HORDE_GREEN)
         table.add_column("Avg Time (s)", justify="right", footer_style=HORDE_GREEN)
