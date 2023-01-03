@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 import functools as ft
 import datetime as dt
 import asyncio
@@ -11,6 +12,9 @@ from horde.errors import StopZombie
 from horde import delay
 import horde._compat
 import horde.events
+
+if TYPE_CHECKING:
+    from horde.environment import Environment
 
 log = logging.getLogger(__name__)
 
@@ -27,6 +31,10 @@ class Zombie:
         self._state = ZombieState.inactive
         self._tasks = []
         self._process_zombie_for_tasks()
+
+    @property
+    def horde(self):
+        return self.environment
 
     @property
     def name(self) -> str:
