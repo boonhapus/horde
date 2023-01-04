@@ -17,6 +17,7 @@ from pynput import keyboard
 from rich import box
 import httpx
 
+from horde._state import ZombieState
 from horde._ui import UI
 from horde.events import SpawnZombie, HTTPZombieRequestComplete, DespawnStart, HordeStop
 import horde
@@ -52,6 +53,17 @@ class ZombieRow:
         self._max_zombies = max_zombies
         self.data: list[HTTPZombieRequestComplete] = []
 
+    def zombie_state_to_color(self) -> str:
+        mapping = {
+            ZombieState.inactive: "gray",
+            ZombieState.starting: "pale_green3",
+            ZombieState.running: "pale_green3",
+            ZombieState.waiting: "yellow",
+            ZombieState.stopping: "bright_red",
+            ZombieState.stopped: "bright_red",
+        }
+        return mapping[self._zombie.state]
+
     def format_error(self, exception) -> str:
         if isinstance(exception, httpx.HTTPStatusError):
             error = "HTTP {0.status_code}: {0.request.url.path}".format(exception)
@@ -62,6 +74,7 @@ class ZombieRow:
 
     def generate_row_data(self) -> list[str]:
         pad = len(str(self._max_zombies))
+        color = self.zombie_state_to_color()
         requests = 0
         error = NULL
         errors = 0
@@ -76,8 +89,8 @@ class ZombieRow:
                 error, *_ = str(row.exception).split("\n")
 
         data = {
-            "zombie_name": f":zombie: [green]#{self._zombie.zombie_id: >{pad}}[/]",
-            "zombie_type": self._zombie.name,
+            "zombie_name": f":zombie: [{color}]#{self._zombie.zombie_id: >{pad}}",
+            "zombie_type": f"[{color}]{self._zombie.name}",
             "last_request": self.data[-1].request_start_time.strftime("%H:%M:%S") if self.data else "Never",
             "last_error": error,
             "requests": requests,
