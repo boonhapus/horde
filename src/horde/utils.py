@@ -1,37 +1,19 @@
+"""
+Public utility functions for working with horde.
+"""
 from __future__ import annotations
-from inspect import signature, isawaitable
 from typing import Any, Callable
 import functools as ft
 import asyncio
-import inspect
 
-
-@ft.lru_cache(maxsize=2048)
-def count_parameters(func: Callable) -> int:
-    """
-    Count the number of parameters in a callable
-    """
-    return len(signature(func).parameters)
-
-
-async def invoke(callback: Callable, *params: object) -> Any:
-    """
-    Invoke a callback with an arbitrary number of parameters.
-    """
-    parameter_count = count_parameters(callback)
-    result = callback(*params[:parameter_count])
-
-    if isawaitable(result):
-        result = await result
-
-    return result
+import horde._compat
 
 
 def async_memoize(async_fn: Callable) -> Callable:
     """
     Remember the result of <async_fn>.
     """
-    if not inspect.iscoroutinefunction(async_fn):  # COMPAT PY38+
+    if not horde._compat.iscoroutinefunction(async_fn):
         raise RuntimeError(f"a coroutine function is required, got {async_fn}")
 
     _cache = {}

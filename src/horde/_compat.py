@@ -1,5 +1,8 @@
+from typing import Callable
+import functools as ft
 import time as time_
 import platform
+import inspect
 import sys
 
 IS_PY_310_COMPATIBLE = sys.version_info >= (3, 10, 0)
@@ -14,3 +17,17 @@ if IS_WINDOWS:
     get_time = time_.perf_counter
 else:
     get_time = time_.monotonic
+
+
+if sys.version_info >= (3, 8, 0):
+    iscoroutinefunction = inspect.iscoroutinefunction
+
+# functools._unwrap_partial not release until 3.8
+else:
+    def iscoroutinefunction(fn: Callable) -> bool:
+        while isinstance(fn, ft.partial):
+            fn = fn.func
+
+        return inspect.iscoroutinefunction(fn)
+
+    iscoroutinefunction.__doc__ = inspect.iscoroutinefunction.__doc__
