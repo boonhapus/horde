@@ -15,7 +15,7 @@ class HTTPXZombie(Zombie):
         self.client = httpx.AsyncClient(base_url=self.environment.host, event_hooks={"response": [self.on_response]})
 
     def _build_error_from_response(self, response: httpx.Response) -> httpx.HTTPStatusError:
-        if response.is_success:
+        if not response.is_error:
             return None
 
         # Taken from httpx.Response.raise_for_status
