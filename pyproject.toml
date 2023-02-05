@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "horde"
-version = "1.0.0b7"
+dynamic = ["version"]
 description = "a performance testing framework using python asyncio"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -47,6 +47,9 @@ bug_tracker = "https://github.com/boonhapus/horde/issues"
 [project.optional-dependencies]
 cli = ["textual >= 0.8.2"]
 dev = ["black", "coverage[toml]", "ward"]
+
+[tool.setuptools.dynamic]
+version = {attr = "horde._version.__version__"}
 
 [tool.black]
 line-length = 120
