@@ -8,6 +8,9 @@ class StatsRecorder:
 
         environment.events.any.add_listener(self.record_it_all)
 
+    def __iter__(self):
+        return iter(self._events)
+
     async def record_it_all(self, event):
         self._events.append(event)
 
