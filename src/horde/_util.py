@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping, Sequence
-from typing import Any, Match, Pattern
+from typing import Any, Dict, Match, Pattern
 import re
 
 
@@ -80,9 +82,9 @@ class ArbitraryState:
     An object that can be used to store arbitrary state.
     """
 
-    _state: dict[str, Any]
+    _state: Dict[str, Any]
 
-    def __init__(self, state: dict[str, Any] = None):
+    def __init__(self, state: Dict[str, Any] = None):
         if state is None:
             state = {}
 

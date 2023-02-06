@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+from typing import Any, List
 import datetime as dt
-import typing
 
 from horde._util import camel_to_snake
 import horde._compat
@@ -9,7 +10,7 @@ import horde._compat
 if TYPE_CHECKING:
     import horde
 
-_registered_event_types: list[Event] = []
+_registered_event_types: List[Event] = []
 
 
 class Event:
@@ -49,7 +50,7 @@ class Any(Event):
 
     __slots__ = ("fired_event",)
 
-    def __init__(self, source: typing.Any, fired_event: Event):
+    def __init__(self, source: Any, fired_event: Event):
         super().__init__(source)
         self.fired_event = fired_event
 

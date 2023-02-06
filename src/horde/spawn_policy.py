@@ -1,4 +1,6 @@
-from typing import Callable
+from __future__ import annotations
+
+from typing import Callable, List, Tuple
 import functools as ft
 import itertools as it
 
@@ -23,13 +25,13 @@ class SpawnPolicy:
 class RoundRobinSpawnPolicy(SpawnPolicy):
     """ """
 
-    def __init__(self, zombie_classes: list[Zombie], *, sort_key: Callable = None):
+    def __init__(self, zombie_classes: List[Zombie], *, sort_key: Callable = None):
         if sort_key is None:
             sort_key = ft.partial(lambda zombie_cls: zombie_cls.__name__)
 
         self.zombie_classes = zombie_classes
         self._actual_iterator = it.cycle(sorted(self.zombie_classes, key=sort_key))
 
-    def shape(self) -> tuple[Zombie, int]:
+    def shape(self) -> Tuple[Zombie, int]:
         """ """
         return next(self._actual_iterator), 1

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from collections.abc import Callable
-from typing import Any
+from typing import Any, List
 import warnings
 import asyncio
 import logging
@@ -22,7 +22,7 @@ class EventHook:
         "handlers",
     )
 
-    def __init__(self, event: horde.events.Event, handlers: list[Callable] = None):
+    def __init__(self, event: horde.events.Event, handlers: List[Callable] = None):
         self.event_cls = event
         self.handlers = [] if handlers is None else handlers
 
@@ -56,7 +56,7 @@ class EventBus:
 
         raise AttributeError(f"EventBus has no registered event or attribute named '{attr_name}'")
 
-    def register(self, event_cls: horde.events.Event, *, listeners: list[Callable] = None) -> None:
+    def register(self, event_cls: horde.events.Event, *, listeners: List[Callable] = None) -> None:
         """
         Add a new EventHook into the bus.
         """
@@ -91,7 +91,7 @@ class EventBus:
 
         return futures
 
-    def fire(self, event: horde.events.Event) -> list[asyncio.Future]:
+    def fire(self, event: horde.events.Event) -> List[asyncio.Future]:
         """
         Fire an event on the bus.
         """

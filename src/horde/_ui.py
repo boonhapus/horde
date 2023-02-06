@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 class UI:
-    def __init__(self, environment):
+    def __init__(self, environment: Environment):
         self.environment = environment
 
     @property

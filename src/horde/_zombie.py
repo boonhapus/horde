@@ -25,7 +25,7 @@ class Zombie:
     stop_on_error: bool = False
     task_delay: delay.WaitCalculator = delay.seconds(0.0)
 
-    def __init__(self, environment, zombie_id: int):
+    def __init__(self, environment: Environment, zombie_id: int):
         self.environment = environment
         self.zombie_id = zombie_id
         self._state = ZombieState.inactive
@@ -45,7 +45,7 @@ class Zombie:
         return self._state
 
     @state.setter
-    def state(self, new_state) -> None:
+    def state(self, new_state: ZombieState) -> None:
         if new_state not in (ZombieState.stopping, ZombieState.stopped):
             self._check_if_stopping()
 
