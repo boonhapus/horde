@@ -31,10 +31,11 @@ classifiers = [
 ]
 
 dependencies = [
-    "httpx >= 0.23.1",
-    "typer[all] >= 0.7.0",
-    "rich >= 12.6.0",
-    "pynput >= 1.7.6",
+    "httpx",
+    "typer",
+    "rich",
+    "pynput",
+    "psutil",
 ]
 
 
