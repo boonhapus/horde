@@ -61,7 +61,7 @@ def task(fn: Callable = None, *, weight: int = 1):
         return ft.partial(task, weight=weight)
 
     if hasattr(fn, "__zombie_task__"):
-        warnings.warn(f"{fn.__qualname__} is already a task! redefining with {weight=}")
+        warnings.warn(f"{fn.__qualname__} is already a task! redefining with weight={weight}")
 
     fn.__zombie_task__ = ZombieTask(fn=fn, weight=weight)
     return fn

@@ -60,6 +60,6 @@ def throughput(n_tasks: int) -> WaitCalculator:
     result of this will be a no-op, or 0s wait time.
     """
     if n_tasks < 1:
-        raise ValueError(f"'n_tasks' cannot be less than 1, got {n_tasks=}")
+        raise ValueError(f"'n_tasks' cannot be less than 1, got n_tasks={n_tasks}")
 
     return paced(1 / n_tasks)
